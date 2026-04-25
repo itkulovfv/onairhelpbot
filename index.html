@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); padding: 20px; }
+        .card { background: var(--tg-theme-secondary-bg-color, #f0f0f0); border-radius: 15px; padding: 15px; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.1); }
+        h2 { margin: 0 0 10px 0; font-size: 18px; color: var(--tg-theme-button-color, #248b6b); }
+        button { background: var(--tg-theme-button-color, #248b6b); color: var(--tg-theme-button-text-color, #fff); border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; margin-bottom: 8px; cursor: pointer; }
+        .btn-del { background: #e74c3c; }
+        .progress-container { width: 100%; background: #ddd; border-radius: 5px; height: 8px; margin: 10px 0; display: none; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background: var(--tg-theme-button-color, #248b6b); transition: width 0.3s; }
+        .status-text { font-size: 12px; text-align: center; margin-top: 5px; min-height: 15px; color: #777; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>📈 ТРЕЙДЕР</h2>
+        <button onclick="startUpload('Trader_Results')">📸 Загрузить фото</button>
+        <button class="btn-del" onclick="apiCall('delete_oldest', 'Trader_Results')">🧹 Удалить 3 старых</button>
+        <div class="progress-container" id="pc-Trader_Results"><div class="progress-bar" id="pb-Trader_Results"></div></div>
+        <div class="status-text" id="st-Trader_Results"></div>
+    </div>
+    <div class="card">
+        <h2>💰 ИНВЕСТОР</h2>
+        <button onclick="startUpload('Investor_Results')">📸 Загрузить фото</button>
+        <button class="btn-del" onclick="apiCall('delete_oldest', 'Investor_Results')">🧹 Удалить 3 старых</button>
+        <div class="progress-container" id="pc-Investor_Results"><div class="progress-bar" id="pb-Investor_Results"></div></div>
+        <div class="status-text" id="st-Investor_Results"></div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // СЮДА НОВУЮ ССЫЛКУ ИЗ GOOGLE:
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx6JcEaH8Ur0sOkmw_9Nh2gTqQ04bY_dNRpoy2BOuxxjuiN6PbaMhd9FFl7Q8_nFAz1eg/exec";
+
+        async function apiCall(type, target) {
+            const pb = document.getElementById('pb-' + target);
+            const pc = document.getElementById('pc-' + target);
+            const st = document.getElementById('st-' + target);
+            
+            pc.style.display = 'block';
+            pb.style.width = '30%';
+            st.innerText = "Отправка команды...";
+
+            try {
+                // Прямой запрос к Google Script
+                await fetch(SCRIPT_URL + "?action=" + type + "&target=" + target, {
+                    method: 'GET', // GET надежнее для скриптов без сложных CORS настроек
+                    mode: 'no-cors' 
+                });
+
+                pb.style.width = '100%';
+                st.innerText = "Готово! Таблица обновлена.";
+                setTimeout(() => { pc.style.display = 'none'; pb.style.width = '0%'; st.innerText = ""; }, 3000);
+            } catch (e) {
+                st.innerText = "Ошибка соединения";
+                console.error(e);
+            }
+        }
+
+        function startUpload(target) {
+            // Для загрузки фото мы ШЛЕМ данные боту (это закроет окно, чтобы вы могли прикрепить фото)
+            tg.sendData(JSON.stringify({action: 'upload', target: target}));
+        }
+    </script>
+</body>
+</html>
