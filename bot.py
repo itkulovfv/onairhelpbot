@@ -12,7 +12,7 @@ load_dotenv()
 
 TOKEN = os.getenv("BOT_TOKEN")
 APPS_SCRIPT_URL = os.getenv("APPS_SCRIPT_URL")
-WEB_APP_URL = "https://itkulovfv.github.io/tg_onair_helper/"
+WEB_APP_URL = "https://itkulovfv.github.io/helper_bot/"
 
 cloudinary.config(secure=True)
 
