@@ -16,7 +16,7 @@ load_dotenv()
 API_TOKEN = os.getenv("BOT_TOKEN")
 ALLOWED_USERS = [int(i.strip()) for i in os.getenv("ALLOWED_USERS", "").split(",") if i.strip()]
 GOOGLE_URL = "https://script.google.com/macros/s/AKfycbxaUlAyQ_7CwoDlMmxcKSUxrTWdIonUpQBlmZiF31XR3XRLdu0YEigQ8yz_xZCAGp0fMw/exec"
-GITHUB_URL = "https://itkulovfv.github.io/tg_onair_helper/"
+GITHUB_URL = "https://itkulovfv.github.io/helper_bot/"
 
 # Конфигурация Cloudinary
 cloudinary.config(
