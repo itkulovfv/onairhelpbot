@@ -2,3 +2,4 @@ python-telegram-bot
 requests
 cloudinary
 python-dotenv
+aiogram==2.25.1
