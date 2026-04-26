@@ -3,210 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Freedom Air Control</title>
+    <title>Freedom On Air</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Freedom Branding 2026 Colors */
-        :root {
-            --f-main-green: #028140;
-            --f-secondary-green: #164734;
-            --f-bg-light: #EDFBFF;
-            --f-white: #FFFFFF;
-            --f-black: #0B1015;
-            --f-gray: #6C7278;
-        }
+        :root { --f-green: #028140; --f-bg: #EDFBFF; --f-white: #FFFFFF; --f-black: #0B1015; --f-gray: #6C7278; }
+        body { background-color: var(--f-bg); color: var(--f-black); font-family: -apple-system, sans-serif; margin: 0; padding-bottom: 30px; display: flex; flex-direction: column; align-items: center; }
+        
+        .header { width: 100%; padding: 25px 0; text-align: center; background: var(--f-white); border-bottom: 1px solid #d1eef5; margin-bottom: 20px; }
+        .header h1 { font-size: 18px; margin: 0; font-weight: 700; color: #164734; letter-spacing: 1px; }
 
-        body {
-            background-color: var(--f-bg-light);
-            color: var(--f-black);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
+        .container { width: 92%; max-width: 400px; }
+        
+        .card { background: var(--f-white); border-radius: 24px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 20px; }
+        .card-header { display: flex; align-items: center; margin-bottom: 15px; border-left: 4px solid var(--f-green); padding-left: 12px; }
+        .card-title { font-size: 14px; font-weight: 800; color: var(--f-black); text-transform: uppercase; }
+        
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        .btn { background: var(--f-green); color: white; border: none; border-radius: 12px; padding: 16px 5px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-red { background: transparent; border: 1.5px solid #E30613; color: #E30613; } /* Красный акцент для удаления */
+        .btn:active { transform: scale(0.96); opacity: 0.8; }
 
-        .header {
-            width: 100%;
-            padding: 30px 0;
-            text-align: center;
-            background-color: var(--f-white);
-            border-bottom: 1px solid rgba(2, 129, 64, 0.08);
-            margin-bottom: 24px;
-        }
-
-        .header h1 {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 0;
-            letter-spacing: 0.05em;
-            color: var(--f-secondary-green);
-        }
-
-        .container {
-            width: 90%;
-            max-width: 400px;
-        }
-
-        .card {
-            background: var(--f-white);
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(11, 16, 21, 0.05);
-            text-align: center;
-        }
-
-        .card-label {
-            font-size: 12px;
-            color: var(--f-gray);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
-
-        .status-msg {
-            font-size: 15px;
-            line-height: 1.5;
-            margin-bottom: 24px;
-            color: var(--f-secondary-green);
-        }
-
-        /* Freedom Main Button */
-        .btn-action {
-            background-color: var(--f-main-green);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            padding: 18px;
-            font-size: 16px;
-            font-weight: 600;
-            width: 100%;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            box-shadow: 0 4px 12px rgba(2, 129, 64, 0.2);
-        }
-
-        .btn-action:active {
-            transform: scale(0.97);
-            box-shadow: 0 2px 6px rgba(2, 129, 64, 0.1);
-        }
-
-        .btn-action:disabled {
-            background-color: var(--f-gray);
-            opacity: 0.6;
-            box-shadow: none;
-        }
-
-        /* Loader */
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top-color: #fff;
-            border-radius: 50%;
-            display: none;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .footer {
-            margin-top: auto;
-            padding: 30px;
-            font-size: 12px;
-            color: var(--f-gray);
-            letter-spacing: 0.1em;
-            font-weight: 500;
-        }
+        #toast { position: fixed; bottom: 30px; background: var(--f-black); color: white; padding: 12px 25px; border-radius: 30px; font-size: 14px; display: none; z-index: 100; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>FREEDOM AIR</h1>
-    </div>
+    <div class="header"><h1>FREEDOM ON AIR</h1></div>
 
     <div class="container">
+        
         <div class="card">
-            <div class="card-label">Database Control</div>
-            <p class="status-msg" id="status">Система готова к очистке устаревших данных из таблицы.</p>
-            
-            <button class="btn-action" id="mainBtn" onclick="requestCleanup()">
-                <div class="spinner" id="loader"></div>
-                <span id="btnText">Очистить историю (3)</span>
-            </button>
+            <div class="card-header"><div class="card-title">Подписка Инвестора</div></div>
+            <div class="btn-group">
+                <button class="btn" onclick="call('investor_add')">Добавить (+3)</button>
+                <button class="btn btn-red" onclick="call('investor_del')">Удалить (-3)</button>
+            </div>
         </div>
+
+        <div class="card">
+            <div class="card-header"><div class="card-title">Подписка Трейдера</div></div>
+            <div class="btn-group">
+                <button class="btn" onclick="call('trader_add')">Добавить (+3)</button>
+                <button class="btn btn-red" onclick="call('trader_del')">Удалить (-3)</button>
+            </div>
+        </div>
+
     </div>
 
-    <div class="footer">FREEDOM 2026</div>
+    <div id="toast">Запрос отправлен...</div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.ready();
 
-        // Твоя новая ссылка
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxaUlAyQ_7CwoDlMmxcKSUxrTWdIonUpQBlmZiF31XR3XRLdu0YEigQ8yz_xZCAGp0fMw/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCmxFktlAkg-UBAR82Fg48ZF5vgaSPUxA0D7nZNtva8mNxx5xcqdiN4bTdtUkwEOZ7vQ/exec";
 
-        async function requestCleanup() {
-            const btn = document.getElementById('mainBtn');
-            const loader = document.getElementById('loader');
-            const btnText = document.getElementById('btnText');
-            const status = document.getElementById('status');
-
-            // Получаем данные пользователя из TG
+        async function call(actionName) {
             const user = tg.initDataUnsafe.user;
+            if (!user) return;
+
+            const toast = document.getElementById('toast');
+            toast.style.display = 'block';
             
-            if (!user) {
-                status.innerText = "Ошибка: Запустите через бота";
-                status.style.color = "red";
-                return;
-            }
-
-            // Визуальный отклик
-            btn.disabled = true;
-            loader.style.display = 'block';
-            btnText.innerText = 'Обработка...';
-
             try {
-                // Отправляем запрос в Google
-                // Используем mode: 'no-cors' для работы с Google Scripts из браузера
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    body: JSON.stringify({
-                        action: 'delete_oldest',
-                        user_id: user.id // Скрипт в Google сам проверит этот ID в WHITE_LIST
-                    })
+                    body: JSON.stringify({ action: actionName, user_id: user.id })
                 });
-
-                // Успех (в no-cors мы не видим текст ответа, но если нет ошибки catch - запрос ушел)
-                status.innerText = "Команда отправлена. Таблица будет обновлена через несколько секунд.";
-                status.style.color = "var(--f-main-green)";
+                toast.innerText = "Готово!";
                 tg.HapticFeedback.notificationOccurred('success');
-
-            } catch (error) {
-                console.error(error);
-                status.innerText = "Ошибка сети или доступа";
-                status.style.color = "red";
+            } catch (e) {
+                toast.innerText = "Ошибка";
                 tg.HapticFeedback.notificationOccurred('error');
-            } finally {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    loader.style.display = 'none';
-                    btnText.innerText = 'Очистить историю (3)';
-                }, 3000);
             }
+
+            setTimeout(() => { toast.style.display = 'none'; toast.innerText = "Запрос отправлен..."; }, 2500);
         }
     </script>
 </body>
