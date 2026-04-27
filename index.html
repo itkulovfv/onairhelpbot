@@ -6,27 +6,23 @@
     <title>Freedom On Air</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Фирменная палитра Freedom 2026 */
         :root {
             --f-green: #028140;
             --f-bg: #EDFBFF;
             --f-white: #FFFFFF;
             --f-black: #0B1015;
-            --f-gray: #6C7278;
             --f-red: #E30613;
         }
 
         body {
             background-color: var(--f-bg);
             color: var(--f-black);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, sans-serif;
             margin: 0;
-            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
         }
 
         .header {
@@ -51,14 +47,12 @@
             max-width: 400px;
         }
 
-        /* Карточки разделов */
         .card {
             background: var(--f-white);
             border-radius: 24px;
             padding: 24px;
-            box-shadow: 0 4px 20px rgba(11, 16, 21, 0.04);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
             margin-bottom: 20px;
-            transition: transform 0.2s;
         }
 
         .card-header {
@@ -73,10 +67,8 @@
             font-size: 15px;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        /* Кнопки */
         .btn-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -92,13 +84,9 @@
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .btn-outline-red {
+        .btn-red {
             background: transparent;
             border: 1.5px solid var(--f-red);
             color: var(--f-red);
@@ -106,21 +94,12 @@
 
         .btn:active {
             transform: scale(0.97);
-            opacity: 0.8;
         }
 
-        .btn:disabled {
-            background-color: var(--f-gray);
-            border-color: var(--f-gray);
-            opacity: 0.5;
-        }
-
-        /* Скрытый инпут для файлов */
         input[type="file"] {
             display: none;
         }
 
-        /* Уведомление снизу (Toast) */
         #toast {
             position: fixed;
             bottom: 30px;
@@ -131,11 +110,8 @@
             padding: 12px 24px;
             border-radius: 50px;
             font-size: 14px;
-            font-weight: 500;
             display: none;
             z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            white-space: nowrap;
         }
     </style>
 </head>
@@ -147,97 +123,69 @@
 
     <div class="container">
         <div class="card">
-            <div class="card-header"><div class="card-title">Подписка Инвестора</div></div>
+            <div class="card-header"><div class="card-title">Инвестор</div></div>
             <div class="btn-group">
                 <button class="btn" onclick="document.getElementById('file-inv').click()">+ Результат</button>
-                <button class="btn btn-outline-red" onclick="triggerAction('delete_3', 'Investor')">Удалить -3</button>
+                <button class="btn btn-red" onclick="send('delete_3', 'Investor')">Удалить -3</button>
             </div>
-            <input type="file" id="file-inv" accept="image/*" onchange="handleFileSelect(this, 'Investor')">
+            <input type="file" id="file-inv" accept="image/*" onchange="handleFile(this, 'Investor')">
         </div>
 
         <div class="card">
-            <div class="card-header"><div class="card-title">Подписка Трейдера</div></div>
+            <div class="card-header"><div class="card-title">Трейдер</div></div>
             <div class="btn-group">
                 <button class="btn" onclick="document.getElementById('file-trd').click()">+ Результат</button>
-                <button class="btn btn-outline-red" onclick="triggerAction('delete_3', 'Trader')">Удалить -3</button>
+                <button class="btn btn-red" onclick="send('delete_3', 'Trader')">Удалить -3</button>
             </div>
-            <input type="file" id="file-trd" accept="image/*" onchange="handleFileSelect(this, 'Trader')">
+            <input type="file" id="file-trd" accept="image/*" onchange="handleFile(this, 'Trader')">
         </div>
     </div>
 
-    <div id="toast">Обработка...</div>
+    <div id="toast"></div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.ready();
 
-        // --- ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ПОСЛЕ ДЕПЛОЯ В GOOGLE ---
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGaTn_sd701-PsTAfVAzuVN4gsjVsdbfRDRluw26bTKZwW4ZieYrreyBmQiXMzbdl7nA/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYyqGaZgISp5PWsGuLJWjQTzZZG4ahIgcHOdthOhk53C4fHPXACCkyevwzi9-25CILoA/exec";
 
-        function showStatus(text, duration = 3000) {
-            const toast = document.getElementById('toast');
-            toast.innerText = text;
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, duration);
+        function status(text) {
+            const t = document.getElementById('toast');
+            t.innerText = text;
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 3000);
         }
 
-        // Обработка выбора файла
-        function handleFileSelect(input, sheetName) {
-            if (!input.files || !input.files[0]) return;
-            
-            const file = input.files[0];
+        function handleFile(input, sheet) {
+            if (!input.files[0]) return;
             const reader = new FileReader();
-
-            showStatus("🎨 Обработка фото...");
-
-            reader.onloadend = async function() {
-                const base64Data = reader.result;
-                await triggerAction('upload_and_add', sheetName, base64Data);
-                input.value = ""; // Сброс инпута
-            };
-
-            reader.onerror = () => showStatus("❌ Ошибка чтения файла");
-            reader.readAsDataURL(file);
+            status("Обработка...");
+            reader.onloadend = () => send('upload_and_add', sheet, reader.result);
+            reader.readAsDataURL(input.files[0]);
+            input.value = "";
         }
 
-        // Универсальная функция отправки запроса
-        async function triggerAction(actionName, sheetName, fileData = "") {
-            // Берем зашифрованную строку безопасности от Telegram
+        async function send(action, sheet, file = "") {
             const initData = tg.initData;
+            if (!initData) return;
 
-            if (!initData) {
-                alert("Ошибка: Запустите приложение из Telegram бота");
-                return;
-            }
-
-            showStatus("🛰️ Синхронизация...");
+            status("Синхронизация...");
 
             try {
-                // Отправляем данные в Google Script
-                const response = await fetch(SCRIPT_URL, {
+                await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Специфика Google Scripts при вызове из браузера
-                    headers: {
-                        'Content-Type': 'text/plain' // Важно для обхода ограничений CORS
-                    },
+                    mode: 'no-cors',
                     body: JSON.stringify({
-                        action: actionName,
-                        sheet_name: sheetName,
-                        initData: initData, // Наш зашифрованный "паспорт"
-                        file_base64: fileData
+                        action: action,
+                        sheet_name: sheet,
+                        initData: initData,
+                        file_base64: file
                     })
                 });
-
-                // Так как мы используем no-cors, мы не можем прочитать JSON ответа,
-                // но запрос всё равно исполнится на стороне Google.
-                showStatus("✅ Freedom On Air: Готово!");
+                status("Готово!");
                 tg.HapticFeedback.notificationOccurred('success');
-
-            } catch (error) {
-                console.error("Fetch error:", error);
-                showStatus("❌ Ошибка соединения");
-                tg.HapticFeedback.notificationOccurred('error');
+            } catch (e) {
+                status("Ошибка");
             }
         }
     </script>
