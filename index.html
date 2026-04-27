@@ -6,80 +6,239 @@
     <title>Freedom On Air</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --f-green: #028140; --f-bg: #EDFBFF; --f-white: #FFFFFF; --f-black: #0B1015; --f-gray: #6C7278; }
-        body { background-color: var(--f-bg); color: var(--f-black); font-family: -apple-system, sans-serif; margin: 0; padding-bottom: 30px; display: flex; flex-direction: column; align-items: center; }
-        
-        .header { width: 100%; padding: 25px 0; text-align: center; background: var(--f-white); border-bottom: 1px solid #d1eef5; margin-bottom: 20px; }
-        .header h1 { font-size: 18px; margin: 0; font-weight: 700; color: #164734; letter-spacing: 1px; }
+        /* Фирменная палитра Freedom 2026 */
+        :root {
+            --f-green: #028140;
+            --f-bg: #EDFBFF;
+            --f-white: #FFFFFF;
+            --f-black: #0B1015;
+            --f-gray: #6C7278;
+            --f-red: #E30613;
+        }
 
-        .container { width: 92%; max-width: 400px; }
-        
-        .card { background: var(--f-white); border-radius: 24px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 20px; }
-        .card-header { display: flex; align-items: center; margin-bottom: 15px; border-left: 4px solid var(--f-green); padding-left: 12px; }
-        .card-title { font-size: 14px; font-weight: 800; color: var(--f-black); text-transform: uppercase; }
-        
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        
-        .btn { background: var(--f-green); color: white; border: none; border-radius: 12px; padding: 16px 5px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-red { background: transparent; border: 1.5px solid #E30613; color: #E30613; } /* Красный акцент для удаления */
-        .btn:active { transform: scale(0.96); opacity: 0.8; }
+        body {
+            background-color: var(--f-bg);
+            color: var(--f-black);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
 
-        #toast { position: fixed; bottom: 30px; background: var(--f-black); color: white; padding: 12px 25px; border-radius: 30px; font-size: 14px; display: none; z-index: 100; }
+        .header {
+            width: 100%;
+            padding: 25px 0;
+            text-align: center;
+            background-color: var(--f-white);
+            border-bottom: 1px solid rgba(2, 129, 64, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 1.5px;
+            color: #164734;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 400px;
+        }
+
+        /* Карточки разделов */
+        .card {
+            background: var(--f-white);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(11, 16, 21, 0.04);
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--f-green);
+            padding-left: 12px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Кнопки */
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            background-color: var(--f-green);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 16px 5px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-outline-red {
+            background: transparent;
+            border: 1.5px solid var(--f-red);
+            color: var(--f-red);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+            opacity: 0.8;
+        }
+
+        .btn:disabled {
+            background-color: var(--f-gray);
+            border-color: var(--f-gray);
+            opacity: 0.5;
+        }
+
+        /* Скрытый инпут для файлов */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Уведомление снизу (Toast) */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--f-black);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header"><h1>FREEDOM ON AIR</h1></div>
+    <div class="header">
+        <h1>FREEDOM ON AIR</h1>
+    </div>
 
     <div class="container">
-        
         <div class="card">
             <div class="card-header"><div class="card-title">Подписка Инвестора</div></div>
             <div class="btn-group">
-                <button class="btn" onclick="call('investor_add')">Добавить (+3)</button>
-                <button class="btn btn-red" onclick="call('investor_del')">Удалить (-3)</button>
+                <button class="btn" onclick="document.getElementById('file-inv').click()">+ Результат</button>
+                <button class="btn btn-outline-red" onclick="triggerAction('delete_3', 'Investor')">Удалить -3</button>
             </div>
+            <input type="file" id="file-inv" accept="image/*" onchange="handleFileSelect(this, 'Investor')">
         </div>
 
         <div class="card">
             <div class="card-header"><div class="card-title">Подписка Трейдера</div></div>
             <div class="btn-group">
-                <button class="btn" onclick="call('trader_add')">Добавить (+3)</button>
-                <button class="btn btn-red" onclick="call('trader_del')">Удалить (-3)</button>
+                <button class="btn" onclick="document.getElementById('file-trd').click()">+ Результат</button>
+                <button class="btn btn-outline-red" onclick="triggerAction('delete_3', 'Trader')">Удалить -3</button>
             </div>
+            <input type="file" id="file-trd" accept="image/*" onchange="handleFileSelect(this, 'Trader')">
         </div>
-
     </div>
 
-    <div id="toast">Запрос отправлен...</div>
+    <div id="toast">Обработка...</div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.ready();
 
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCmxFktlAkg-UBAR82Fg48ZF5vgaSPUxA0D7nZNtva8mNxx5xcqdiN4bTdtUkwEOZ7vQ/exec";
+        // --- ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ПОСЛЕ ДЕПЛОЯ В GOOGLE ---
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzoOnrS1ZvJW6ahmFJilf2qODvR9vbwqYHulToityVad7MLV1pWsvyb6AGJSyO0UPbJDA/exec";
 
-        async function call(actionName) {
-            const user = tg.initDataUnsafe.user;
-            if (!user) return;
-
+        function showStatus(text, duration = 3000) {
             const toast = document.getElementById('toast');
+            toast.innerText = text;
             toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, duration);
+        }
+
+        // Обработка выбора файла
+        function handleFileSelect(input, sheetName) {
+            if (!input.files || !input.files[0]) return;
             
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({ action: actionName, user_id: user.id })
-                });
-                toast.innerText = "Готово!";
-                tg.HapticFeedback.notificationOccurred('success');
-            } catch (e) {
-                toast.innerText = "Ошибка";
-                tg.HapticFeedback.notificationOccurred('error');
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            showStatus("🎨 Обработка фото...");
+
+            reader.onloadend = async function() {
+                const base64Data = reader.result;
+                await triggerAction('upload_and_add', sheetName, base64Data);
+                input.value = ""; // Сброс инпута
+            };
+
+            reader.onerror = () => showStatus("❌ Ошибка чтения файла");
+            reader.readAsDataURL(file);
+        }
+
+        // Универсальная функция отправки запроса
+        async function triggerAction(actionName, sheetName, fileData = "") {
+            // Берем зашифрованную строку безопасности от Telegram
+            const initData = tg.initData;
+
+            if (!initData) {
+                alert("Ошибка: Запустите приложение из Telegram бота");
+                return;
             }
 
-            setTimeout(() => { toast.style.display = 'none'; toast.innerText = "Запрос отправлен..."; }, 2500);
+            showStatus("🛰️ Синхронизация...");
+
+            try {
+                // Отправляем данные в Google Script
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Специфика Google Scripts при вызове из браузера
+                    headers: {
+                        'Content-Type': 'text/plain' // Важно для обхода ограничений CORS
+                    },
+                    body: JSON.stringify({
+                        action: actionName,
+                        sheet_name: sheetName,
+                        initData: initData, // Наш зашифрованный "паспорт"
+                        file_base64: fileData
+                    })
+                });
+
+                // Так как мы используем no-cors, мы не можем прочитать JSON ответа,
+                // но запрос всё равно исполнится на стороне Google.
+                showStatus("✅ Freedom On Air: Готово!");
+                tg.HapticFeedback.notificationOccurred('success');
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                showStatus("❌ Ошибка соединения");
+                tg.HapticFeedback.notificationOccurred('error');
+            }
         }
     </script>
 </body>
