@@ -292,24 +292,28 @@ async def main():
     log.info(f"Authorized users: {ALLOWED_USER_IDS}")
     log.info(f"API server starting on {SERVER_HOST}:{SERVER_PORT}")
 
-    # HTTP API server runner
-    web_app = web.Application(middlewares=[cors_middleware])
-    web_app.router.add_get("/api/photos", handle_get_photos)
-    web_app.router.add_post("/api/upload", handle_upload)
-    web_app.router.add_post("/api/delete", handle_delete)
-    web_app.router.add_route("OPTIONS", "/api/{tail:.*}", lambda r: web.Response())
-
+    # Start API server
     runner = web.AppRunner(web_app)
     await runner.setup()
     site = web.TCPSite(runner, SERVER_HOST, SERVER_PORT)
     await site.start()
 
-    # Start Telegram bot (blocking call)
-    # run_polling internally calls initialize(), start() and blocks until stop
-    await bot_app.run_polling(allowed_updates=Update.ALL_TYPES)
-    
-    # Cleanup after bot stops
-    await runner.cleanup()
+    # Start Telegram bot using context manager (handles init/shutdown)
+    async with bot_app:
+        await bot_app.start()
+        await bot_app.updater.start_polling(allowed_updates=Update.ALL_TYPES)
+        log.info("🚀 Бот и API сервер запущены!")
+        
+        # Keep running until interrupted
+        try:
+            while True:
+                await asyncio.sleep(3600)
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            log.info("Остановка...")
+        finally:
+            await bot_app.updater.stop()
+            await bot_app.stop()
+            await runner.cleanup()
 
 
 if __name__ == "__main__":
