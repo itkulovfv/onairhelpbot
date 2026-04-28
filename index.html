@@ -1,201 +1,404 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Freedom On Air</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root {
-            --f-green: #028140;
-            --f-bg: #EDFBFF;
-            --f-white: #FFFFFF;
-            --f-black: #0B1015;
-            --f-red: #E30613;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Управление фото</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#0f0f1a;--card:#1a1a2e;--accent:#6c63ff;--text:#e8e8f0;--dim:#8888aa;--success:#00c896;--danger:#ff4d6d;--border:#2a2a44;--r:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.container{max-width:480px;margin:0 auto;padding:16px}
 
-        body {
-            background-color: var(--f-bg);
-            color: var(--f-black);
-            font-family: -apple-system, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
+/* Header */
+.hdr{text-align:center;padding:20px 0 16px}
+.hdr h1{font-size:20px;background:linear-gradient(135deg,#6c63ff,#00c896);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr p{color:var(--dim);font-size:13px;margin-top:4px}
 
-        .header {
-            width: 100%;
-            padding: 25px 0;
-            text-align: center;
-            background-color: var(--f-white);
-            border-bottom: 1px solid rgba(2, 129, 64, 0.1);
-            margin-bottom: 24px;
-        }
+/* Section cards */
+.sections{display:flex;flex-direction:column;gap:12px}
+.sec-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s}
+.sec-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,99,255,.15)}
+.sec-icon{font-size:36px}
+.sec-info h3{font-size:16px;margin-bottom:2px}
+.sec-info p{color:var(--dim);font-size:13px}
+.sec-arrow{margin-left:auto;color:var(--dim);font-size:20px}
 
-        .header h1 {
-            font-size: 18px;
-            font-weight: 700;
-            margin: 0;
-            letter-spacing: 1.5px;
-            color: #164734;
-        }
+/* Gallery screen */
+.screen{display:none}
+.screen.active{display:block}
 
-        .container {
-            width: 92%;
-            max-width: 400px;
-        }
+.topbar{display:flex;align-items:center;gap:10px;padding:12px 0;margin-bottom:8px}
+.back-btn{background:none;border:none;color:var(--accent);font-size:24px;cursor:pointer;padding:4px 8px}
+.topbar h2{font-size:17px;flex:1}
+.photo-count{color:var(--dim);font-size:13px}
 
-        .card {
-            background: var(--f-white);
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-            margin-bottom: 20px;
-        }
+/* Photo grid */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.grid-item{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color .2s}
+.grid-item.selected{border-color:var(--danger)}
+.grid-item img{width:100%;height:100%;object-fit:cover}
+.grid-check{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.5);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;opacity:0;transition:opacity .2s}
+.grid-item.selected .grid-check{opacity:1;background:var(--danger);border-color:var(--danger)}
+.grid-item:hover .grid-check{opacity:1}
+.grid-meta{position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,.7));font-size:10px;color:#ccc}
 
-        .card-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--f-green);
-            padding-left: 12px;
-        }
+.empty-state{text-align:center;padding:40px 20px;color:var(--dim)}
+.empty-state .empty-icon{font-size:48px;margin-bottom:12px}
 
-        .card-title {
-            font-size: 15px;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
+/* Action buttons */
+.actions{display:flex;gap:10px;margin-bottom:12px}
+.btn{flex:1;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-add{background:linear-gradient(135deg,#6c63ff,#5a52d5);color:#fff}
+.btn-add:hover:not(:disabled){box-shadow:0 4px 16px rgba(108,99,255,.3)}
+.btn-del{background:rgba(255,77,109,.15);color:var(--danger);border:1px solid rgba(255,77,109,.3)}
+.btn-del:hover:not(:disabled){background:rgba(255,77,109,.25)}
 
-        .btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
+/* Upload modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:flex-end;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:24px 16px}
+.modal h3{font-size:17px;margin-bottom:16px;text-align:center}
 
-        .btn {
-            background-color: var(--f-green);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            padding: 16px 5px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-        }
+.upload-zone{border:2px dashed var(--border);border-radius:var(--r);padding:28px 16px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:16px}
+.upload-zone:hover{border-color:var(--accent)}
+.upload-zone .uz-icon{font-size:32px;margin-bottom:8px}
+.upload-zone p{color:var(--dim);font-size:13px}
+.upload-zone strong{color:var(--accent)}
 
-        .btn-red {
-            background: transparent;
-            border: 1.5px solid var(--f-red);
-            color: var(--f-red);
-        }
+.previews{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.prev-item{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden}
+.prev-item img{width:100%;height:100%;object-fit:cover}
+.prev-remove{position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,.6);border:none;border-radius:50%;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
-        .btn:active {
-            transform: scale(0.97);
-        }
+.file-counter{text-align:center;color:var(--dim);font-size:13px;margin-bottom:14px}
 
-        input[type="file"] {
-            display: none;
-        }
+.btn-full{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-submit{background:linear-gradient(135deg,#6c63ff,#5a52d5);color:#fff}
+.btn-cancel{background:var(--bg);color:var(--dim);margin-top:8px;border:1px solid var(--border)}
 
-        #toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--f-black);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-size: 14px;
-            display: none;
-            z-index: 1000;
-        }
-    </style>
+/* Spinner */
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+.toast{position:fixed;bottom:-80px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;transition:bottom .4s cubic-bezier(.34,1.56,.64,1);z-index:200;max-width:90%;text-align:center}
+.toast.show{bottom:24px}
+.toast.success{background:var(--success);color:#fff}
+.toast.error{background:var(--danger);color:#fff}
+
+/* Loading overlay */
+.loading{display:none;text-align:center;padding:40px;color:var(--dim)}
+.loading.active{display:block}
+.loading .spinner{display:inline-block;width:32px;height:32px;margin-bottom:12px}
+</style>
 </head>
-
 <body>
+<div class="container">
 
-    <div class="header">
-        <h1>FREEDOM ON AIR</h1>
+<!-- SCREEN 1: Section selection -->
+<div class="screen active" id="screenSections">
+  <div class="hdr">
+    <h1>📸 Управление фото</h1>
+    <p>Выберите раздел сайта</p>
+  </div>
+  <div class="sections">
+    <div class="sec-card" onclick="openSection('investor')">
+      <div class="sec-icon">📈</div>
+      <div class="sec-info"><h3>Инвестор</h3><p>Фотографии раздела «Инвестор»</p></div>
+      <div class="sec-arrow">›</div>
     </div>
-
-    <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">Инвестор</div>
-            </div>
-            <div class="btn-group">
-                <button class="btn" onclick="document.getElementById('file-inv').click()">+ Результат</button>
-                <button class="btn btn-red" onclick="send('delete_3', 'Investor')">Удалить -3</button>
-            </div>
-            <input type="file" id="file-inv" accept="image/*" onchange="handleFile(this, 'Investor')">
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <div class="card-title">Трейдер</div>
-            </div>
-            <div class="btn-group">
-                <button class="btn" onclick="document.getElementById('file-trd').click()">+ Результат</button>
-                <button class="btn btn-red" onclick="send('delete_3', 'Trader')">Удалить -3</button>
-            </div>
-            <input type="file" id="file-trd" accept="image/*" onchange="handleFile(this, 'Trader')">
-        </div>
+    <div class="sec-card" onclick="openSection('trader')">
+      <div class="sec-icon">📊</div>
+      <div class="sec-info"><h3>Трейдер</h3><p>Фотографии раздела «Трейдер»</p></div>
+      <div class="sec-arrow">›</div>
     </div>
+  </div>
+</div>
 
-    <div id="toast"></div>
+<!-- SCREEN 2: Gallery -->
+<div class="screen" id="screenGallery">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <h2 id="galleryTitle">Раздел</h2>
+    <span class="photo-count" id="photoCount"></span>
+  </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+  <div class="loading" id="galleryLoading">
+    <div class="spinner" style="display:inline-block"></div>
+    <p>Загрузка фото...</p>
+  </div>
 
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAjku5ntkmBmKG7eUvRi4eaXrd5Ds6de4dzpQedh1jevToYZt2pVCgar_EQJpotFSRXQ/exec";
+  <div class="empty-state" id="emptyState" style="display:none">
+    <div class="empty-icon">📭</div>
+    <p>В этом разделе пока нет фотографий</p>
+  </div>
 
-        function status(text) {
-            const t = document.getElementById('toast');
-            t.innerText = text;
-            t.style.display = 'block';
-            setTimeout(() => { t.style.display = 'none'; }, 3000);
-        }
+  <div class="grid" id="photoGrid"></div>
 
-        function handleFile(input, sheet) {
-            if (!input.files[0]) return;
-            const reader = new FileReader();
-            status("Обработка...");
-            reader.onloadend = () => send('upload_and_add', sheet, reader.result);
-            reader.readAsDataURL(input.files[0]);
-            input.value = "";
-        }
+  <div class="actions">
+    <button class="btn btn-del" id="btnDelete" disabled onclick="deleteSelected()">
+      <span id="delText">🗑 Удалить</span>
+      <div class="spinner" id="delSpinner"></div>
+    </button>
+    <button class="btn btn-add" onclick="openUploadModal()">📤 Добавить 3 фото</button>
+  </div>
+</div>
 
-        async function send(action, sheet, file = "") {
-            const initData = tg.initData;
-            if (!initData) return;
+</div>
 
-            status("Синхронизация...");
+<!-- Upload modal -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal">
+    <h3>📤 Загрузить 3 фотографии</h3>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div class="uz-icon">📁</div>
+      <p>Нажмите для выбора файлов<br><strong>JPG, PNG, WebP</strong> · до 32 МБ каждый</p>
+    </div>
+    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
+    <div class="file-counter" id="fileCounter"></div>
+    <div class="previews" id="uploadPreviews"></div>
+    <button class="btn-full btn-submit" id="btnSubmit" disabled onclick="submitUpload()">
+      <span id="submitText">⬆️ Загрузить</span>
+      <div class="spinner" id="submitSpinner"></div>
+    </button>
+    <button class="btn-full btn-cancel" onclick="closeUploadModal()">Отмена</button>
+  </div>
+</div>
 
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // Оставляем для GAS, чтобы избежать CORS preflight issues
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({
-                        action: action,
-                        sheet_name: sheet,
-                        initData: initData,
-                        file_base64: file
-                    })
-                });
-                status("Готово!");
-                tg.HapticFeedback.notificationOccurred('success');
-            } catch (e) {
-                status("Ошибка");
-            }
-        }
-    </script>
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG ───
+// Replace with your Railway backend URL
+const API_BASE = '%%API_BASE_URL%%';
+
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+let currentSection = '';
+let photos = [];
+let selectedIds = new Set();
+let uploadFiles = [];
+
+// ─── Navigation ───
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goBack() {
+  currentSection = '';
+  selectedIds.clear();
+  showScreen('screenSections');
+}
+
+// ─── Open section ───
+async function openSection(section) {
+  currentSection = section;
+  const titles = { investor: '📈 Инвестор', trader: '📊 Трейдер' };
+  document.getElementById('galleryTitle').textContent = titles[section] || section;
+  showScreen('screenGallery');
+  await loadPhotos();
+}
+
+async function loadPhotos() {
+  const grid = document.getElementById('photoGrid');
+  const loading = document.getElementById('galleryLoading');
+  const empty = document.getElementById('emptyState');
+
+  grid.innerHTML = '';
+  loading.classList.add('active');
+  empty.style.display = 'none';
+  selectedIds.clear();
+  updateDeleteBtn();
+
+  try {
+    const resp = await fetch(`${API_BASE}/api/photos?section=${currentSection}`);
+    const data = await resp.json();
+    photos = data.photos || [];
+  } catch (e) {
+    showToast('Ошибка загрузки: ' + e.message, 'error');
+    photos = [];
+  }
+
+  loading.classList.remove('active');
+  document.getElementById('photoCount').textContent = photos.length + ' фото';
+
+  if (photos.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+
+  photos.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'grid-item';
+    div.dataset.rowId = p.rowId;
+    div.innerHTML = `
+      <img src="${p.thumb || p.url}" alt="${p.filename}" loading="lazy">
+      <div class="grid-check">✓</div>
+      <div class="grid-meta">${p.filename || ''}</div>
+    `;
+    div.addEventListener('click', () => toggleSelect(div, p.rowId));
+    grid.appendChild(div);
+  });
+}
+
+function toggleSelect(el, rowId) {
+  if (selectedIds.has(rowId)) {
+    selectedIds.delete(rowId);
+    el.classList.remove('selected');
+  } else {
+    selectedIds.add(rowId);
+    el.classList.add('selected');
+  }
+  updateDeleteBtn();
+}
+
+function updateDeleteBtn() {
+  const btn = document.getElementById('btnDelete');
+  const n = selectedIds.size;
+  btn.disabled = n === 0;
+  document.getElementById('delText').textContent = n > 0 ? `🗑 Удалить (${n})` : '🗑 Удалить';
+}
+
+// ─── Delete ───
+async function deleteSelected() {
+  if (selectedIds.size === 0) return;
+
+  const count = selectedIds.size;
+  const btn = document.getElementById('btnDelete');
+  const spinner = document.getElementById('delSpinner');
+  const text = document.getElementById('delText');
+
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+  text.textContent = 'Удаление...';
+
+  try {
+    const resp = await fetch(`${API_BASE}/api/delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        initData: tg.initData,
+        section: currentSection,
+        rowIds: Array.from(selectedIds)
+      })
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    showToast(`Удалено ${count} фото`, 'success');
+    await loadPhotos();
+  } catch (e) {
+    showToast('Ошибка: ' + e.message, 'error');
+  } finally {
+    spinner.style.display = 'none';
+    text.textContent = '🗑 Удалить';
+    btn.disabled = false;
+    updateDeleteBtn();
+  }
+}
+
+// ─── Upload modal ───
+function openUploadModal() {
+  uploadFiles = [];
+  updateUploadUI();
+  document.getElementById('fileInput').value = '';
+  document.getElementById('uploadModal').classList.add('active');
+}
+
+function closeUploadModal() {
+  document.getElementById('uploadModal').classList.remove('active');
+  uploadFiles = [];
+}
+
+document.getElementById('fileInput').addEventListener('change', function() {
+  const newFiles = Array.from(this.files);
+  const valid = ['image/jpeg', 'image/png', 'image/webp'];
+
+  for (const f of newFiles) {
+    if (!valid.includes(f.type)) { showToast('Неподдерживаемый формат', 'error'); continue; }
+    if (f.size > 32 * 1024 * 1024) { showToast('Файл слишком большой', 'error'); continue; }
+    if (uploadFiles.length < 3) uploadFiles.push(f);
+  }
+  // Keep only 3
+  uploadFiles = uploadFiles.slice(0, 3);
+  updateUploadUI();
+  this.value = '';
+});
+
+function updateUploadUI() {
+  const container = document.getElementById('uploadPreviews');
+  const counter = document.getElementById('fileCounter');
+  const btn = document.getElementById('btnSubmit');
+
+  container.innerHTML = '';
+  counter.textContent = `Выбрано: ${uploadFiles.length} / 3`;
+  btn.disabled = uploadFiles.length !== 3;
+
+  uploadFiles.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'prev-item';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    const rm = document.createElement('button');
+    rm.className = 'prev-remove';
+    rm.textContent = '✕';
+    rm.onclick = () => { uploadFiles.splice(i, 1); updateUploadUI(); };
+    div.appendChild(img);
+    div.appendChild(rm);
+    container.appendChild(div);
+  });
+}
+
+async function submitUpload() {
+  if (uploadFiles.length !== 3) return;
+
+  const btn = document.getElementById('btnSubmit');
+  const spinner = document.getElementById('submitSpinner');
+  const text = document.getElementById('submitText');
+
+  btn.disabled = true;
+  spinner.style.display = 'inline-block';
+  text.textContent = 'Загрузка...';
+
+  try {
+    const formData = new FormData();
+    formData.append('initData', tg.initData);
+    formData.append('section', currentSection);
+    uploadFiles.forEach(f => formData.append('photos', f));
+
+    const resp = await fetch(`${API_BASE}/api/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    showToast('3 фото загружены!', 'success');
+    closeUploadModal();
+    await loadPhotos();
+  } catch (e) {
+    showToast('Ошибка: ' + e.message, 'error');
+  } finally {
+    spinner.style.display = 'none';
+    text.textContent = '⬆️ Загрузить';
+    btn.disabled = false;
+  }
+}
+
+// ─── Toast ───
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
 </body>
-
 </html>
