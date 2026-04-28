@@ -147,7 +147,7 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEJY9R9uscAjNJWc5PPEBd6nkWJ2K2lZhk786PVDSOm7roHBp-VG5mc942xZiL_kD8Gw/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQpDlsnKNT8uur9wgh_4RLoJXjYEX8rt8ni90qsdC1PiF_PGlDT6fX-5yz4w5Rf9vT3A/exec";
 
         function status(text) {
             const t = document.getElementById('toast');
@@ -174,7 +174,8 @@
             try {
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
+                    mode: 'no-cors', // Оставляем для GAS, чтобы избежать CORS preflight issues
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
                         action: action,
                         sheet_name: sheet,
