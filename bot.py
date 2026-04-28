@@ -7,7 +7,8 @@ load_dotenv()
 
 bot = Bot(token=os.getenv("BOT_TOKEN"))
 dp = Dispatcher(bot)
-ALLOWED_USERS = [int(i.strip()) for i in os.getenv("ALLOWED_USERS").split(",")]
+ALLOWED_USERS_RAW = os.getenv("ALLOWED_USERS", "")
+ALLOWED_USERS = [int(i.strip()) for i in ALLOWED_USERS_RAW.split(",") if i.strip()]
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
