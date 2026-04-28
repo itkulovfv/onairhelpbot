@@ -9,7 +9,12 @@
 :root{--bg:#0f0f1a;--card:#1a1a2e;--accent:#6c63ff;--text:#e8e8f0;--dim:#8888aa;--success:#00c896;--danger:#ff4d6d;--border:#2a2a44;--r:14px}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.container{max-width:480px;margin:0 auto;padding:16px}
+.container{max-width:480px;margin:0 auto;padding:16px;display:none}
+.container.auth-ok{display:block}
+.auth-error{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:20px}
+.auth-error.active{display:flex}
+.auth-error .icon{font-size:64px;margin-bottom:20px}
+
 
 /* Header */
 .hdr{text-align:center;padding:20px 0 16px}
@@ -96,7 +101,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </style>
 </head>
 <body>
-<div class="container">
+<div class="auth-error" id="authError">
+  <div class="icon">🔒</div>
+  <h2>Доступ ограничен</h2>
+  <p style="color:var(--dim);margin-top:8px">Пожалуйста, откройте это приложение через официального Telegram бота.</p>
+</div>
+
+<div class="container" id="mainContainer">
+
 
 <!-- SCREEN 1: Section selection -->
 <div class="screen active" id="screenSections">
@@ -175,9 +187,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 // Replace with your Railway backend URL
 const API_BASE = '%%API_BASE_URL%%';
 
+// ─── Telegram Web App ───
 const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
+
+// Простая проверка: открыто ли в Telegram?
+if (!tg.initData) {
+  document.getElementById('authError').classList.add('active');
+} else {
+  document.getElementById('mainContainer').classList.add('auth-ok');
+}
 
 let currentSection = '';
 let photos = [];
