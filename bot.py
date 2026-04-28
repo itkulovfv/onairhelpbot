@@ -15,18 +15,35 @@ from telegram.ext import Application, CommandHandler, MessageHandler, ContextTyp
 load_dotenv()
 
 # ─── Config ───────────────────────────────────────────────────────────────────
-BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-IMGBB_API_KEY = os.getenv("IMGBB_API_KEY", "")
-GOOGLE_SCRIPT_URL = os.getenv("GOOGLE_SCRIPT_URL", "")
-MINI_APP_URL = os.getenv("MINI_APP_URL", "")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
+IMGBB_API_KEY = os.getenv("IMGBB_API_KEY", "").strip()
+GOOGLE_SCRIPT_URL = os.getenv("GOOGLE_SCRIPT_URL", "").strip()
+MINI_APP_URL = os.getenv("MINI_APP_URL", "").strip()
 SERVER_HOST = os.getenv("SERVER_HOST", "0.0.0.0")
 SERVER_PORT = int(os.getenv("SERVER_PORT", "8080"))
-ALLOWED_USER_IDS = set(
-    int(uid.strip()) for uid in os.getenv("ALLOWED_USER_IDS", "").split(",") if uid.strip()
-)
+ALLOWED_USER_IDS_RAW = os.getenv("ALLOWED_USER_IDS", "").strip()
 
 logging.basicConfig(format="%(asctime)s | %(levelname)s | %(message)s", level=logging.INFO)
 log = logging.getLogger(__name__)
+
+# Проверка наличия переменных при запуске
+def check_env():
+    missing = []
+    if not BOT_TOKEN: missing.append("BOT_TOKEN")
+    if not IMGBB_API_KEY: missing.append("IMGBB_API_KEY")
+    if not GOOGLE_SCRIPT_URL: missing.append("GOOGLE_SCRIPT_URL")
+    if not MINI_APP_URL: missing.append("MINI_APP_URL")
+    if not ALLOWED_USER_IDS_RAW: missing.append("ALLOWED_USER_IDS")
+    
+    if missing:
+        log.error(f"❌ ОТСУТСТВУЮТ ПЕРЕМЕННЫЕ ОКРУЖЕНИЯ: {', '.join(missing)}")
+        log.error("Убедитесь, что вы добавили их во вкладку Variables в Railway!")
+        return False
+    return True
+
+ALLOWED_USER_IDS = set(
+    int(uid.strip()) for uid in ALLOWED_USER_IDS_RAW.split(",") if uid.strip()
+)
 
 
 # ─── Telegram initData validation ─────────────────────────────────────────────
@@ -252,6 +269,8 @@ async def fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 async def main():
+    if not check_env():
+        return
     # Telegram bot
     bot_app = Application.builder().token(BOT_TOKEN).build()
     bot_app.add_handler(CommandHandler("start", cmd_start))
