@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -115,6 +116,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="header">
@@ -123,7 +125,9 @@
 
     <div class="container">
         <div class="card">
-            <div class="card-header"><div class="card-title">Инвестор</div></div>
+            <div class="card-header">
+                <div class="card-title">Инвестор</div>
+            </div>
             <div class="btn-group">
                 <button class="btn" onclick="document.getElementById('file-inv').click()">+ Результат</button>
                 <button class="btn btn-red" onclick="send('delete_3', 'Investor')">Удалить -3</button>
@@ -132,7 +136,9 @@
         </div>
 
         <div class="card">
-            <div class="card-header"><div class="card-title">Трейдер</div></div>
+            <div class="card-header">
+                <div class="card-title">Трейдер</div>
+            </div>
             <div class="btn-group">
                 <button class="btn" onclick="document.getElementById('file-trd').click()">+ Результат</button>
                 <button class="btn btn-red" onclick="send('delete_3', 'Trader')">Удалить -3</button>
@@ -147,7 +153,7 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoX0Va03wRt316MfQnVBPRBKn8KLIg8fZfAGBbjEns2eUwoxcaueZcRtdpAIE2vya3BQ/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4gt_N_3WW6-nRfdjEQ8T8sOA15ovqFuHKEq26EKcNxhRqqKs5_npq0Ov5GD6ZTCxHsQ/exec";
 
         function status(text) {
             const t = document.getElementById('toast');
@@ -191,4 +197,5 @@
         }
     </script>
 </body>
+
 </html>
