@@ -158,7 +158,7 @@ async def handle_upload(request: web.Request) -> web.Response:
                         "url": result["data"]["url"],
                         "thumb": result["data"].get("thumb", {}).get("url", result["data"]["url"]),
                         "filename": f["filename"],
-                        "id": str(uuid.uuid4())
+                        "rowId": str(uuid.uuid4())
                     })
 
             # Save to Google Sheet
