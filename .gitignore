@@ -1,5 +1,20 @@
+# Postman
+postman/
+.postman/
+
+# Environment
 .env
+OnAirHelpBot/.env
+
+# Python
 __pycache__/
 *.pyc
-.DS_Store
 venv/
+.venv/
+
+# System
+.DS_Store
+
+# Tilda Display Files (Hidden from Git)
+OnAirHelpBot/investor_display.html
+OnAirHelpBot/trader_display.html
