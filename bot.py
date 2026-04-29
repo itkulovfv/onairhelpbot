@@ -153,19 +153,20 @@ async def handle_upload(request: web.Request) -> web.Response:
                     result = await resp.json()
                     if not result.get("success"):
                         return web.json_response({"error": f"ImgBB error: {result}"}, status=500)
+                    import uuid
                     uploaded.append({
                         "url": result["data"]["url"],
                         "thumb": result["data"].get("thumb", {}).get("url", result["data"]["url"]),
                         "filename": f["filename"],
+                        "id": str(uuid.uuid4())
                     })
 
             # Save to Google Sheet
             payload = {
-                "action": "add",
+                "action": "upload",
                 "section": section,
                 "photos": uploaded,
-                "userId": str(user.get("id", "")),
-                "userName": user.get("first_name", ""),
+                "user": user.get("first_name", "Unknown"),
             }
             async with session.post(GOOGLE_SCRIPT_URL, json=payload) as resp:
                 gs_result = await resp.json(content_type=None)
