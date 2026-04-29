@@ -135,8 +135,8 @@ async def handle_upload(request: web.Request) -> web.Response:
 
         if section not in ("investor", "trader"):
             return web.json_response({"error": "Invalid section"}, status=400)
-        if not files or len(files) != 3:
-            return web.json_response({"error": "Exactly 3 photos required"}, status=400)
+        if not files:
+            return web.json_response({"error": "No photos provided"}, status=400)
 
         # Upload each photo to ImgBB
         uploaded = []
@@ -208,6 +208,36 @@ async def handle_delete(request: web.Request) -> web.Response:
         return web.json_response({"error": str(e)}, status=500)
 
 
+async def handle_reorder(request: web.Request) -> web.Response:
+    """POST /api/reorder — rearrange photo rows."""
+    try:
+        data = await request.json()
+        init_data = data.get("initData", "")
+        section = data.get("section", "")
+        row_ids = data.get("rowIds", []) # Ordered list of RowIDs
+
+        user, err = authorize_request(init_data)
+        if err:
+            return web.json_response({"error": err}, status=403)
+
+        if section not in ("investor", "trader"):
+            return web.json_response({"error": "Invalid section"}, status=400)
+        if not row_ids:
+            return web.json_response({"error": "No order provided"}, status=400)
+
+        async with aiohttp.ClientSession() as session:
+            payload = {"action": "reorder", "section": section, "rowIds": row_ids}
+            async with session.post(GOOGLE_SCRIPT_URL, json=payload) as resp:
+                gs_result = await resp.json(content_type=None)
+
+        log.info(f"User {user.get('id')} reordered photos in {section}")
+        return web.json_response({"status": "ok"})
+
+    except Exception as e:
+        log.error(f"Reorder error: {e}")
+        return web.json_response({"error": str(e)}, status=500)
+
+
 # ─── CORS middleware ──────────────────────────────────────────────────────────
 @web.middleware
 async def cors_middleware(request, handler):
@@ -227,18 +257,23 @@ async def cors_middleware(request, handler):
 # ─── Telegram Bot Handlers ────────────────────────────────────────────────────
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    if user.id not in ALLOWED_USER_IDS:
-        await update.message.reply_text("⛔ Доступ запрещён. Обратитесь к администратору.")
+    user_id = user.id
+    first_name = user.first_name or "коллега"
+
+    if user_id not in ALLOWED_USER_IDS:
+        log.warning(f"Unauthorized access attempt: {user_id}")
+        await update.message.reply_text(f"Я не смогу вам помочь 😔. Вы не сотрудник нашей команды.")
         return
 
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📸 Управление фото", web_app=WebAppInfo(url=MINI_APP_URL))]
-    ])
+    # Клавиатура с кнопкой запуска Mini App
+    keyboard = [
+        [InlineKeyboardButton("🚀 Запустить приложение", web_app=WebAppInfo(url=MINI_APP_URL))]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
     await update.message.reply_text(
-        f"👋 Привет, *{user.first_name}*!\n\n"
-        "Нажми кнопку ниже, чтобы открыть панель управления фотографиями на сайте:",
-        parse_mode="Markdown",
-        reply_markup=keyboard,
+        f"Привет, {first_name}. Я готов к работе — запускай приложение",
+        reply_markup=reply_markup
     )
 
 
@@ -283,6 +318,7 @@ async def main():
     web_app.router.add_get("/api/photos", handle_get_photos)
     web_app.router.add_post("/api/upload", handle_upload)
     web_app.router.add_post("/api/delete", handle_delete)
+    web_app.router.add_post("/api/reorder", handle_reorder)
     web_app.router.add_route("OPTIONS", "/api/{tail:.*}", lambda r: web.Response())
 
     runner = web.AppRunner(web_app)

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
 <title>Управление фото</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <style>
 :root{--bg:#0f0f1a;--card:#1a1a2e;--accent:#6c63ff;--text:#e8e8f0;--dim:#8888aa;--success:#00c896;--danger:#ff4d6d;--border:#2a2a44;--r:14px}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -41,25 +42,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 /* Photo grid */
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-.grid-item{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color .2s}
-.grid-item.selected{border-color:var(--danger)}
-.grid-item img{width:100%;height:100%;object-fit:cover}
-.grid-check{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.5);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;opacity:0;transition:opacity .2s}
-.grid-item.selected .grid-check{opacity:1;background:var(--danger);border-color:var(--danger)}
-.grid-item:hover .grid-check{opacity:1}
-.grid-meta{position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,.7));font-size:10px;color:#ccc}
+.photo-card{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color .2s}
+.photo-card.selected{border-color:var(--danger)}
+.photo-card img{width:100%;height:100%;object-fit:cover}
+.check{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.5);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;opacity:0;transition:opacity .2s}
+.photo-card.selected .check{opacity:1;background:var(--danger);border-color:var(--danger)}
+.photo-card:hover .check{opacity:1}
+.sortable-ghost{opacity:0.4;border:2px dashed var(--accent)}
 
 .empty-state{text-align:center;padding:40px 20px;color:var(--dim)}
 .empty-state .empty-icon{font-size:48px;margin-bottom:12px}
 
 /* Action buttons */
 .actions{display:flex;gap:10px;margin-bottom:12px}
-.btn{flex:1;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn{flex:1;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--card);border:1px solid var(--border);color:var(--text)}
+.btn-danger{color:var(--danger);border-color:rgba(255,77,109,.3)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-add{background:linear-gradient(135deg,#6c63ff,#5a52d5);color:#fff}
-.btn-add:hover:not(:disabled){box-shadow:0 4px 16px rgba(108,99,255,.3)}
-.btn-del{background:rgba(255,77,109,.15);color:var(--danger);border:1px solid rgba(255,77,109,.3)}
-.btn-del:hover:not(:disabled){background:rgba(255,77,109,.25)}
 
 /* Upload modal */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:flex-end;justify-content:center}
@@ -151,11 +149,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="grid" id="photoGrid"></div>
 
   <div class="actions">
-    <button class="btn btn-del" id="btnDelete" disabled onclick="deleteSelected()">
-      <span id="delText">🗑 Удалить</span>
-      <div class="spinner" id="delSpinner"></div>
+    <button class="btn btn-secondary" onclick="toggleReorder()" id="btnReorder">🔃 Порядок</button>
+    <button class="btn btn-danger" onclick="deleteSelected()" id="btnDelete" style="display:none">
+        <span class="spinner" id="delSpinner"></span>
+        <span id="delText">🗑 Удалить</span>
     </button>
-    <button class="btn btn-add" onclick="openUploadModal()">📤 Добавить 3 фото</button>
+    <button class="btn" onclick="openUploadModal()" id="btnUploadAdd">➕ Добавить</button>
+    <button class="btn" onclick="saveOrder()" id="btnSaveOrder" style="display:none;background:var(--success)">✅ Сохранить</button>
   </div>
 </div>
 
@@ -164,10 +164,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <!-- Upload modal -->
 <div class="modal-overlay" id="uploadModal">
   <div class="modal">
-    <h3>📤 Загрузить 3 фотографии</h3>
+    <h3>📤 Загрузить фотографии</h3>
     <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
       <div class="uz-icon">📁</div>
-      <p>Нажмите для выбора файлов<br><strong>JPG, PNG, WebP</strong> · до 32 МБ каждый</p>
+      <p>Нажмите для выбора файлов<br><strong>JPG, PNG, WebP</strong></p>
     </div>
     <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
     <div class="file-counter" id="fileCounter"></div>
@@ -184,7 +184,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <script>
 // ─── CONFIG ───
-// Replace with your Railway backend URL
 const API_BASE = 'https://onairhelpbot-production.up.railway.app';
 
 // ─── Telegram Web App ───
@@ -192,7 +191,6 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// Простая проверка: открыто ли в Telegram?
 if (!tg.initData) {
   document.getElementById('authError').classList.add('active');
 } else {
@@ -202,6 +200,8 @@ if (!tg.initData) {
 let currentSection = '';
 let photos = [];
 let selectedIds = new Set();
+let isReordering = false;
+let sortable = null;
 let uploadFiles = [];
 
 // ─── Navigation ───
@@ -234,7 +234,7 @@ async function loadPhotos() {
   loading.classList.add('active');
   empty.style.display = 'none';
   selectedIds.clear();
-  updateDeleteBtn();
+  updateActionButtons();
 
   try {
     const resp = await fetch(`${API_BASE}/api/photos?section=${currentSection}`);
@@ -253,36 +253,101 @@ async function loadPhotos() {
     return;
   }
 
-  photos.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'grid-item';
-    div.dataset.rowId = p.rowId;
-    div.innerHTML = `
-      <img src="${p.thumb || p.url}" alt="${p.filename}" loading="lazy">
-      <div class="grid-check">✓</div>
-      <div class="grid-meta">${p.filename || ''}</div>
-    `;
-    div.addEventListener('click', () => toggleSelect(div, p.rowId));
-    grid.appendChild(div);
-  });
+  grid.innerHTML = photos.map(p => `
+      <div class="photo-card" data-id="${p.rowId}" onclick="toggleSelect('${p.rowId}')">
+          <img src="${p.thumb || p.url}" alt="">
+          <div class="check">✓</div>
+      </div>
+  `).join('');
+  updateActionButtons();
 }
 
-function toggleSelect(el, rowId) {
-  if (selectedIds.has(rowId)) {
-    selectedIds.delete(rowId);
-    el.classList.remove('selected');
-  } else {
-    selectedIds.add(rowId);
-    el.classList.add('selected');
-  }
-  updateDeleteBtn();
+function updateActionButtons() {
+    const btnDelete = document.getElementById('btnDelete');
+    const btnUpload = document.getElementById('btnUploadAdd');
+    const btnReorder = document.getElementById('btnReorder');
+    const btnSave = document.getElementById('btnSaveOrder');
+
+    if (isReordering) {
+        btnDelete.style.display = 'none';
+        btnUpload.style.display = 'none';
+        btnReorder.textContent = 'Отмена';
+        btnSave.style.display = 'inline-block';
+    } else {
+        btnDelete.style.display = selectedIds.size > 0 ? 'inline-block' : 'none';
+        btnUpload.style.display = selectedIds.size > 0 ? 'none' : 'inline-block';
+        btnReorder.style.display = selectedIds.size > 0 ? 'none' : 'inline-block';
+        btnReorder.textContent = '🔃 Порядок';
+        btnSave.style.display = 'none';
+    }
+    const n = selectedIds.size;
+    document.getElementById('delText').textContent = n > 0 ? `🗑 Удалить (${n})` : '🗑 Удалить';
 }
 
-function updateDeleteBtn() {
-  const btn = document.getElementById('btnDelete');
-  const n = selectedIds.size;
-  btn.disabled = n === 0;
-  document.getElementById('delText').textContent = n > 0 ? `🗑 Удалить (${n})` : '🗑 Удалить';
+function toggleSelect(id) {
+    if (isReordering) return;
+    if (selectedIds.has(id)) {
+        selectedIds.delete(id);
+    } else {
+        selectedIds.add(id);
+    }
+    
+    document.querySelectorAll('.photo-card').forEach(el => {
+        if (el.dataset.id === id) {
+            el.classList.toggle('selected', selectedIds.has(id));
+        }
+    });
+
+    updateActionButtons();
+}
+
+function toggleReorder() {
+    if (isReordering) {
+        isReordering = false;
+        if (sortable) sortable.destroy();
+        loadPhotos();
+    } else {
+        isReordering = true;
+        const grid = document.getElementById('photoGrid');
+        sortable = new Sortable(grid, {
+            animation: 150,
+            ghostClass: 'sortable-ghost'
+        });
+    }
+    updateActionButtons();
+}
+
+async function saveOrder() {
+    const grid = document.getElementById('photoGrid');
+    const newOrder = Array.from(grid.querySelectorAll('.photo-card')).map(el => el.dataset.id);
+    
+    const btnSave = document.getElementById('btnSaveOrder');
+    btnSave.disabled = true;
+    btnSave.textContent = '⏳...';
+
+    try {
+        const resp = await fetch(`${API_BASE}/api/reorder`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                initData: tg.initData,
+                section: currentSection,
+                rowIds: newOrder
+            })
+        });
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        showToast('Порядок сохранен!', 'success');
+        isReordering = false;
+        sortable.destroy();
+        await loadPhotos();
+    } catch (e) {
+        showToast('Ошибка: ' + e.message, 'error');
+    } finally {
+        btnSave.disabled = false;
+        btnSave.textContent = '✅ Сохранить';
+    }
 }
 
 // ─── Delete ───
